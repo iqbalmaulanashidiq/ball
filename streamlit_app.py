@@ -1,175 +1,168 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Kalkulator SPNL - Regula Falsi</title>
+import streamlit as st
+import numpy as np
+import pandas as pd
+import math
+import matplotlib.pyplot as plt
 
-<!-- Library Math.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
-
+# =============================
+# CUSTOM CSS
+# =============================
+st.markdown("""
 <style>
     body {
-        font-family: Arial, sans-serif;
         background: #f4f7f9;
-        margin: 0;
-        padding: 0;
     }
-
-    .container {
-        max-width: 1000px;
-        margin: auto;
-        padding: 20px;
+    .main {
+        background-color: #f4f7f9;
     }
-
-    h1 {
-        text-align: center;
-        margin-bottom: 30px;
-        color: #1976D2;
+    .stTextInput>div>div>input {
+        border-radius: 10px;
     }
-
     .card {
-        background: #fff;
         padding: 20px;
+        background: white;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0px 3px 12px rgba(0,0,0,0.15);
         margin-bottom: 25px;
     }
-
-    .card h2 {
-        margin-top: 0;
-        color: #333;
-    }
-
-    input {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-    }
-
-    .row {
-        display: flex;
-        gap: 15px;
-    }
-
-    .row input {
-        flex: 1;
-    }
-
-    button {
-        width: 100%;
-        padding: 14px;
-        background: #1976D2;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-top: 10px;
-    }
-
-    button:hover {
-        background: #145a9e;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
-
-    table, th, td {
-        border: 1px solid #bbb;
-    }
-
-    th, td {
-        padding: 8px;
-        text-align: center;
-    }
-
-    .result {
-        padding: 12px;
-        background: #e8f5e9;
-        border-left: 5px solid #43A047;
-        margin-top: 10px;
-        border-radius: 8px;
-    }
-
-    .error {
-        padding: 12px;
-        background: #FFEBEE;
-        border-left: 5px solid #E53935;
-        margin-top: 10px;
-        border-radius: 8px;
-    }
 </style>
-</head>
+""", unsafe_allow_html=True)
 
-<body>
+# =============================
+# TITLE
+# =============================
+st.markdown("<h1 style='text-align:center; color:#1976D2;'>Kalkulator SPNL - Metode Regula Falsi</h1>", unsafe_allow_html=True)
 
-<div class="container">
+# =============================
+# STEP 1: INPUT FUNGSI
+# =============================
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("Step 1: Masukkan Persamaan f(x)")
+fungsi = st.text_input("Contoh: x**3 - x - 2", value="x**3 - x - 2")
+st.markdown("</div>", unsafe_allow_html=True)
 
-    <h1>Kalkulator SPNL - Metode Regula Falsi</h1>
 
-    <!-- Step 1 -->
-    <div class="card">
-        <h2>Step 1: Masukkan Persamaan</h2>
-        <input type="text" id="fungsi" placeholder="contoh: x^3 - x - 2">
-        <p id="preview"></p>
-    </div>
+# =============================
+# STEP 2: INTERVAL
+# =============================
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("Step 2: Pilih Interval")
 
-    <!-- Step 2 -->
-    <div class="card">
-        <h2>Step 2: Pilih Interval</h2>
-        <div class="row">
-            <input type="number" id="a" placeholder="a">
-            <input type="number" id="b" placeholder="b">
-        </div>
-        <p>f(a) = <span id="fa"></span></p>
-        <p>f(b) = <span id="fb"></span></p>
-        <p id="intervalInfo"></p>
-    </div>
+col1, col2 = st.columns(2)
+with col1:
+    a = st.number_input("a", value=1.0)
+with col2:
+    b = st.number_input("b", value=2.0)
 
-    <!-- Step 3 -->
-    <div class="card">
-        <h2>Step 3: Pengaturan Lanjut</h2>
-        <input type="number" id="maxIter" value="50">
-        <input type="number" id="tol" value="0.000001" step="0.000001">
+# fungsi evaluator
+def f(x):
+    return eval(fungsi)
 
-        <button onclick="hitung()">Hitung Akar</button>
-    </div>
+fa = f(a)
+fb = f(b)
 
-    <div id="hasil"></div>
-    <div id="tabel"></div>
+st.write(f"f(a) = {fa}")
+st.write(f"f(b) = {fb}")
 
-</div>
+if fa * fb > 0:
+    st.error("Interval tidak valid! f(a) dan f(b) tidak bertanda berbeda.")
+else:
+    st.success("Interval valid ✓")
 
-<script>
-// Preview fungsi
-document.getElementById("fungsi").addEventListener("input", () => {
-    document.getElementById("preview").innerHTML =
-        "Anda memasukkan: f(x) = " + document.getElementById("fungsi").value;
-});
+st.markdown("</div>", unsafe_allow_html=True)
 
-// Update f(a) dan f(b)
-["a", "b", "fungsi"].forEach(id => {
-    document.getElementById(id).addEventListener("input", hitungFAFB);
-});
 
-function hitungFAFB() {
-    let fn = document.getElementById("fungsi").value;
-    let a = parseFloat(document.getElementById("a").value);
-    let b = parseFloat(document.getElementById("b").value);
+# =============================
+# STEP 3: PARAMETER
+# =============================
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("Step 3: Pengaturan Lanjut")
 
-    if (!fn || isNaN(a) || isNaN(b)) return;
+col1, col2 = st.columns(2)
+with col1:
+    max_iter = st.number_input("Maksimum Iterasi", value=50)
+with col2:
+    tol = st.number_input("Toleransi Error", value=0.000001, format="%.10f")
 
-    try {
-        let fa = math.evaluate(fn, {x: a});
-        let fb = math.evaluate(fn, {x: b});
+hitung_button = st.button("Hitung Akar")
+st.markdown("</div>", unsafe_allow_html=True)
 
-        document.getElementById("fa").innerText = fa;
-        document.getElementById("fb").innerText = fb;
 
-        if (fa * fb > 0) {
-            document.getElementById("intervalInfo").innerHTML =
+# =============================
+# PROSES REGULA FALSI
+# =============================
+if hitung_button:
+
+    if fa * fb > 0:
+        st.error("Perhitungan dibatalkan: interval tidak valid.")
+    else:
+        a0, b0 = a, b
+        fa = f(a0)
+        fb = f(b0)
+        xr_old = 0
+        data_iterasi = []
+
+        for i in range(1, max_iter + 1):
+
+            xr = (a0 * fb - b0 * fa) / (fb - fa)
+            fxr = f(xr)
+            error = abs(xr - xr_old)
+
+            data_iterasi.append([i, a0, b0, xr, fxr, error])
+
+            if error < tol:
+                break
+
+            if fa * fxr < 0:
+                b0 = xr
+                fb = fxr
+            else:
+                a0 = xr
+                fa = fxr
+
+            xr_old = xr
+
+        # =============================
+        # HASIL
+        # =============================
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("Hasil Perhitungan")
+        st.success(f"""
+        **Akar mendekati:** {xr}  
+        **Error akhir:** {error}  
+        **Total iterasi:** {len(data_iterasi)}  
+        """)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # =============================
+        # TABEL ITERASI
+        # =============================
+        df = pd.DataFrame(data_iterasi,
+            columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"])
+        
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("Tabel Iterasi")
+        st.dataframe(df, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # =============================
+        # GRAFIK
+        # =============================
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("Grafik Fungsi f(x)")
+
+        x_vals = np.linspace(a - 2, b + 2, 400)
+        y_vals = [f(x) for x in x_vals]
+
+        fig, ax = plt.subplots(figsize=(7,4))
+        ax.plot(x_vals, y_vals, label="f(x)")
+        ax.axhline(0, color='black', linewidth=1)
+
+        # titik akar
+        ax.scatter([xr], [f(xr)], color='red', label="Akar", zorder=5)
+
+        ax.set_title("Grafik Fungsi")
+        ax.legend()
+        st.pyplot(fig)
+
+        st.markdown("</div>", unsafe_allow_html=True)
