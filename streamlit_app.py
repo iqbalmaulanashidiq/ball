@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import math
 
 # =============================
@@ -43,7 +44,10 @@ st.markdown("<h1>Kalkulator SPNL - Metode Regula Falsi</h1>", unsafe_allow_html=
 # =============================
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("Step 1: Masukkan Persamaan f(x)")
-fungsi = st.text_input("Contoh: x**3 - x - 2\nGunakan math/np jika perlu: math.sin(x), np.exp(x)", value="x**3 - x - 2")
+fungsi = st.text_input(
+    "Contoh: x**3 - x - 2\nGunakan math/np jika perlu: math.sin(x), np.exp(x)",
+    value="x**3 - x - 2"
+)
 st.markdown("</div>", unsafe_allow_html=True)
 
 # =============================
@@ -159,17 +163,18 @@ if hitung_button:
         y_vals = []
 
         for x in x_vals:
-            try:
-                y = eval(fungsi, {"x": x, "np": np, "math": math})
-                y_vals.append(y)
-            except:
-                y_vals.append(np.nan)
+            y = f(x)  # f(x) sudah aman
+            y_vals.append(y)
 
         fig, ax = plt.subplots(figsize=(7,4))
         ax.plot(x_vals, y_vals, label="f(x)")
         ax.axhline(0, color='black', linewidth=1)
-        # titik akar
-        ax.scatter([xr], [f(xr)], color='red', label="Akar", zorder=5)
+
+        # Scatter titik akar hanya jika xr valid
+        y_akar = f(xr)
+        if not np.isnan(xr) and not np.isnan(y_akar):
+            ax.scatter([xr], [y_akar], color='red', label="Akar", zorder=5)
+
         ax.set_title("Grafik Fungsi")
         ax.legend()
         st.pyplot(fig)
