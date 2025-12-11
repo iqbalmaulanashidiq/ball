@@ -4,45 +4,69 @@ import pandas as pd
 import math
 
 # =============================
-# CUSTOM CSS
+# MENU PILIHAN FONT UNTUK TITLE
 # =============================
-st.markdown("""
+font_choice = st.sidebar.selectbox(
+    "Pilih Font Title",
+    ["Poppins", "Arial", "Georgia", "Times New Roman", "Courier New", "Roboto"]
+)
+
+# CSS import Google Font (jika perlu)
+google_font_url = {
+    "Poppins": "Poppins",
+    "Roboto": "Roboto",
+    "Arial": "",
+    "Georgia": "",
+    "Times New Roman": "",
+    "Courier New": ""
+}
+
+if google_font_url[font_choice] != "":
+    st.markdown(f"""
+    <link href="https://fonts.googleapis.com/css2?family={google_font_url[font_choice].replace(' ', '+')}:wght@400;600&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
+
+# =============================
+# CUSTOM CSS DENGAN FONT TITLE
+# =============================
+st.markdown(f"""
 <style>
-    body {
+    body {{
         background: #f4f7f9;
-    }
-    .main {
-        background-color: #f4f7f9;
-    }
-    .stTextInput>div>div>input {
-        border-radius: 10px;
-    }
-    .card {
+    }}
+
+    h1 {{
+        font-family: '{font_choice}', sans-serif !important;
+        text-align: center;
+        color: #1976D2;
+        margin-bottom: 30px;
+    }}
+
+    .card {{
         padding: 20px;
         background: white;
         border-radius: 12px;
         box-shadow: 0px 3px 12px rgba(0,0,0,0.15);
         margin-bottom: 25px;
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
 # =============================
 # TITLE
 # =============================
-st.markdown("<h1 style='text-align:center; color:#1976D2;'>Kalkulator SPNL - Metode Regula Falsi</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>Kalkulator SPNL - Metode Regula Falsi</h1>", unsafe_allow_html=True)
 
 # =============================
-# STEP 1: INPUT FUNGSI
+# STEP 1
 # =============================
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("Step 1: Masukkan Persamaan f(x)")
 fungsi = st.text_input("Contoh: x**3 - x - 2", value="x**3 - x - 2")
 st.markdown("</div>", unsafe_allow_html=True)
 
-
 # =============================
-# STEP 2: INTERVAL
+# STEP 2
 # =============================
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("Step 2: Pilih Interval")
@@ -53,7 +77,6 @@ with col1:
 with col2:
     b = st.number_input("b", value=2.0)
 
-# fungsi evaluator
 def f(x):
     return eval(fungsi)
 
@@ -70,9 +93,8 @@ else:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-
 # =============================
-# STEP 3: PARAMETER
+# STEP 3
 # =============================
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("Step 3: Pengaturan Lanjut")
@@ -86,9 +108,8 @@ with col2:
 hitung_button = st.button("Hitung Akar")
 st.markdown("</div>", unsafe_allow_html=True)
 
-
 # =============================
-# PROSES REGULA FALSI
+# METODE REGULA FALSI
 # =============================
 if hitung_button:
 
@@ -102,7 +123,6 @@ if hitung_button:
         data_iterasi = []
 
         for i in range(1, max_iter + 1):
-
             xr = (a0 * fb - b0 * fa) / (fb - fa)
             fxr = f(xr)
             error = abs(xr - xr_old)
@@ -121,9 +141,7 @@ if hitung_button:
 
             xr_old = xr
 
-        # =============================
-        # HASIL
-        # =============================
+        # Hasil
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("Hasil Perhitungan")
         st.success(f"""
@@ -133,9 +151,7 @@ if hitung_button:
         """)
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # =============================
-        # TABEL ITERASI
-        # =============================
+        # Tabel
         df = pd.DataFrame(data_iterasi,
             columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"])
         
@@ -144,9 +160,7 @@ if hitung_button:
         st.dataframe(df, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # =============================
-        # GRAFIK
-        # =============================
+        # Grafik
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("Grafik Fungsi f(x)")
 
@@ -156,8 +170,6 @@ if hitung_button:
         fig, ax = plt.subplots(figsize=(7,4))
         ax.plot(x_vals, y_vals, label="f(x)")
         ax.axhline(0, color='black', linewidth=1)
-
-        # titik akar
         ax.scatter([xr], [f(xr)], color='red', label="Akar", zorder=5)
 
         ax.set_title("Grafik Fungsi")
