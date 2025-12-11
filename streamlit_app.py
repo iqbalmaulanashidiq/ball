@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>Kalkulator SPNL - Regula Falsi</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+<!-- Library Math.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+
 <style>
     body {
-        font-family: 'Poppins', sans-serif;
+        font-family: Arial, sans-serif;
         background: #f4f7f9;
         margin: 0;
         padding: 0;
@@ -102,6 +105,7 @@
     }
 </style>
 </head>
+
 <body>
 
 <div class="container">
@@ -136,125 +140,36 @@
         <button onclick="hitung()">Hitung Akar</button>
     </div>
 
-    <!-- Hasil -->
     <div id="hasil"></div>
-
-    <!-- Tabel Iterasi -->
     <div id="tabel"></div>
 
 </div>
 
 <script>
-    // UPDATE PREVIEW FUNGSI
-    document.getElementById("fungsi").addEventListener("input", () => {
-        document.getElementById("preview").innerHTML =
-            "Anda memasukkan: f(x) = " + document.getElementById("fungsi").value;
-    });
+// Preview fungsi
+document.getElementById("fungsi").addEventListener("input", () => {
+    document.getElementById("preview").innerHTML =
+        "Anda memasukkan: f(x) = " + document.getElementById("fungsi").value;
+});
 
-    // UPDATE f(a) DAN f(b)
-    document.getElementById("a").addEventListener("input", hitungFAFB);
-    document.getElementById("b").addEventListener("input", hitungFAFB);
-    document.getElementById("fungsi").addEventListener("input", hitungFAFB);
+// Update f(a) dan f(b)
+["a", "b", "fungsi"].forEach(id => {
+    document.getElementById(id).addEventListener("input", hitungFAFB);
+});
 
-    function hitungFAFB() {
-        let fn = document.getElementById("fungsi").value;
-        let a = parseFloat(document.getElementById("a").value);
-        let b = parseFloat(document.getElementById("b").value);
+function hitungFAFB() {
+    let fn = document.getElementById("fungsi").value;
+    let a = parseFloat(document.getElementById("a").value);
+    let b = parseFloat(document.getElementById("b").value);
 
-        try {
-            let fa = math.evaluate(fn, {x: a});
-            let fb = math.evaluate(fn, {x: b});
+    if (!fn || isNaN(a) || isNaN(b)) return;
 
-            document.getElementById("fa").innerText = fa;
-            document.getElementById("fb").innerText = fb;
-
-            if (fa * fb > 0) {
-                document.getElementById("intervalInfo").innerHTML =
-                    "<div class='error'>Interval tidak valid: f(a) dan f(b) tidak bertanda berbeda.</div>";
-            } else {
-                document.getElementById("intervalInfo").innerHTML =
-                    "<div class='result'>Interval valid ✓</div>";
-            }
-
-        } catch {
-            document.getElementById("fa").innerText = "";
-            document.getElementById("fb").innerText = "";
-        }
-    }
-
-    // METODE REGULA FALSI
-    function hitung() {
-        let fn = document.getElementById("fungsi").value;
-        let a = parseFloat(document.getElementById("a").value);
-        let b = parseFloat(document.getElementById("b").value);
-        let maxIter = parseInt(document.getElementById("maxIter").value);
-        let tol = parseFloat(document.getElementById("tol").value);
-
+    try {
         let fa = math.evaluate(fn, {x: a});
         let fb = math.evaluate(fn, {x: b});
 
-        let iterasi = [];
-        let xrOld = 0, xr = 0;
+        document.getElementById("fa").innerText = fa;
+        document.getElementById("fb").innerText = fb;
 
-        for (let i = 1; i <= maxIter; i++) {
-            xr = (a*fb - b*fa) / (fb - fa);
-            let fxr = math.evaluate(fn, {x: xr});
-
-            iterasi.push([i, a, b, xr, fxr, Math.abs(xr - xrOld)]);
-            
-            if (Math.abs(xr - xrOld) < tol) break;
-
-            if (fa * fxr < 0) {
-                b = xr;
-                fb = fxr;
-            } else {
-                a = xr;
-                fa = fxr;
-            }
-
-            xrOld = xr;
-        }
-
-        // TAMPILKAN HASIL
-        document.getElementById("hasil").innerHTML = `
-            <div class="card">
-                <h2>Hasil Perhitungan</h2>
-                <div class="result">
-                    Akar mendekati: <b>${xr}</b><br>
-                    Error: ${Math.abs(xr - xrOld)}<br>
-                    Iterasi total: ${iterasi.length}
-                </div>
-            </div>
-        `;
-
-        // TAMPILKAN TABEL
-        let tabelHTML = `
-            <div class="card">
-            <h2>Tabel Iterasi</h2>
-            <table>
-                <tr>
-                    <th>Iterasi</th><th>a</th><th>b</th>
-                    <th>x_r</th><th>f(x_r)</th><th>Error</th>
-                </tr>
-        `;
-
-        iterasi.forEach(row => {
-            tabelHTML += `
-                <tr>
-                    <td>${row[0]}</td>
-                    <td>${row[1]}</td>
-                    <td>${row[2]}</td>
-                    <td>${row[3]}</td>
-                    <td>${row[4]}</td>
-                    <td>${row[5]}</td>
-                </tr>`;
-        });
-
-        tabelHTML += "</table></div>";
-
-        document.getElementById("tabel").innerHTML = tabelHTML;
-    }
-</script>
-
-</body>
-</html>
+        if (fa * fb > 0) {
+            document.getElementById("intervalInfo").innerHTML =
