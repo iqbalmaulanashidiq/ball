@@ -12,7 +12,7 @@ st.markdown("""
     }
 
     h1 {
-        font-family: 'Roboto', serif !important; /* Ubah font di sini */
+        font-family: 'Georgia', serif !important; /* Ubah font di sini */
         text-align: center;
         color: #1976D2;
         margin-bottom: 30px;
