@@ -2,33 +2,28 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import math
+import matplotlib.pyplot as plt   # ✅ FIX UTAMA
 
 # =============================
-# CUSTOM CSS (FONT STATIS UNTUK TITLE)
+# CUSTOM CSS
 # =============================
 st.markdown("""
 <style>
     body {
         background: #f4f7f9;
     }
-
     h1 {
-        font-family: 'Georgia', serif !important; /* Ubah font di sini */
+        font-family: 'Georgia', serif !important;
         text-align: center;
         color: #1976D2;
         margin-bottom: 30px;
     }
-
     .card {
         padding: 20px;
         background: white;
         border-radius: 12px;
         box-shadow: 0px 3px 12px rgba(0,0,0,0.15);
         margin-bottom: 25px;
-    }
-
-    .stTextInput>div>div>input {
-        border-radius: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -39,18 +34,18 @@ st.markdown("""
 st.markdown("<h1>Kalkulator SPNL - Metode Regula Falsi</h1>", unsafe_allow_html=True)
 
 # =============================
-# STEP 1: INPUT FUNGSI
+# INPUT FUNGSI
 # =============================
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("Step 1: Masukkan Persamaan f(x)")
 fungsi = st.text_input(
-    "Contoh: x**3 - x - 2\nGunakan math/np jika perlu: math.sin(x), np.exp(x)",
+    "Contoh: x**3 - x - 2\nGunakan math / np jika perlu",
     value="x**3 - x - 2"
 )
 st.markdown("</div>", unsafe_allow_html=True)
 
 # =============================
-# STEP 2: INTERVAL
+# INTERVAL
 # =============================
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("Step 2: Pilih Interval")
@@ -61,28 +56,26 @@ with col1:
 with col2:
     b = st.number_input("b", value=2.0)
 
-# Fungsi evaluator aman
 def f(x):
     try:
         return eval(fungsi, {"x": x, "np": np, "math": math})
     except:
         return np.nan
 
-fa = f(a)
-fb = f(b)
-
+fa, fb = f(a), f(b)
 st.write(f"f(a) = {fa}")
 st.write(f"f(b) = {fb}")
 
-if fa * fb > 0:
-    st.error("Interval tidak valid! f(a) dan f(b) tidak bertanda berbeda.")
-else:
+valid_interval = fa * fb < 0
+if valid_interval:
     st.success("Interval valid ✓")
+else:
+    st.error("Interval tidak valid")
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # =============================
-# STEP 3: PARAMETER
+# PARAMETER
 # =============================
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("Step 3: Pengaturan Lanjut")
@@ -91,7 +84,7 @@ col1, col2 = st.columns(2)
 with col1:
     max_iter = st.number_input("Maksimum Iterasi", value=50)
 with col2:
-    tol = st.number_input("Toleransi Error", value=0.000001, format="%.10f")
+    tol = st.number_input("Toleransi Error", value=1e-6, format="%.10f")
 
 hitung_button = st.button("Hitung Akar")
 st.markdown("</div>", unsafe_allow_html=True)
@@ -99,83 +92,68 @@ st.markdown("</div>", unsafe_allow_html=True)
 # =============================
 # REGULA FALSI
 # =============================
-if hitung_button:
+if hitung_button and valid_interval:
 
-    if fa * fb > 0:
-        st.error("Perhitungan dibatalkan: interval tidak valid.")
-    else:
-        a0, b0 = a, b
-        fa = f(a0)
-        fb = f(b0)
-        xr_old = 0
-        data_iterasi = []
+    a0, b0 = a, b
+    fa, fb = f(a0), f(b0)
+    xr_old = a0
+    data_iterasi = []
 
-        for i in range(1, max_iter + 1):
-            xr = (a0 * fb - b0 * fa) / (fb - fa)
-            fxr = f(xr)
-            error = abs(xr - xr_old)
+    for i in range(1, int(max_iter) + 1):
+        xr = (a0 * fb - b0 * fa) / (fb - fa)
+        fxr = f(xr)
+        error = abs(xr - xr_old)
 
-            data_iterasi.append([i, a0, b0, xr, fxr, error])
+        data_iterasi.append([i, a0, b0, xr, fxr, error])
 
-            if error < tol:
-                break
+        if error < tol:
+            break
 
-            if fa * fxr < 0:
-                b0 = xr
-                fb = fxr
-            else:
-                a0 = xr
-                fa = fxr
+        if fa * fxr < 0:
+            b0, fb = xr, fxr
+        else:
+            a0, fa = xr, fxr
 
-            xr_old = xr
+        xr_old = xr
 
-        # =============================
-        # HASIL
-        # =============================
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("Hasil Perhitungan")
-        st.success(f"""
-        **Akar mendekati:** {xr}  
-        **Error akhir:** {error}  
-        **Total iterasi:** {len(data_iterasi)}  
-        """)
-        st.markdown("</div>", unsafe_allow_html=True)
+    # =============================
+    # HASIL
+    # =============================
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Hasil Perhitungan")
+    st.success(f"""
+    **Akar mendekati:** {xr}  
+    **Error akhir:** {error}  
+    **Total iterasi:** {len(data_iterasi)}
+    """)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        # =============================
-        # TABEL ITERASI
-        # =============================
-        df = pd.DataFrame(data_iterasi,
-            columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"])
-        
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("Tabel Iterasi")
-        st.dataframe(df, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+    # =============================
+    # TABEL ITERASI
+    # =============================
+    df = pd.DataFrame(data_iterasi,
+        columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"])
 
-        # =============================
-        # GRAFIK FUNGSI
-        # =============================
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("Grafik Fungsi f(x)")
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Tabel Iterasi")
+    st.dataframe(df, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        x_vals = np.linspace(a - 2, b + 2, 400)
-        y_vals = []
+    # =============================
+    # GRAFIK
+    # =============================
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Grafik Fungsi f(x)")
 
-        for x in x_vals:
-            y = f(x)  # f(x) sudah aman
-            y_vals.append(y)
+    x_vals = np.linspace(a - 2, b + 2, 400)
+    y_vals = [f(x) for x in x_vals]
 
-        fig, ax = plt.subplots(figsize=(7,4))
-        ax.plot(x_vals, y_vals, label="f(x)")
-        ax.axhline(0, color='black', linewidth=1)
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.plot(x_vals, y_vals, label="f(x)")
+    ax.axhline(0)
+    ax.scatter(xr, f(xr), color="red", label="Akar")
+    ax.legend()
+    ax.grid(True)
 
-        # Scatter titik akar hanya jika xr valid
-        y_akar = f(xr)
-        if not np.isnan(xr) and not np.isnan(y_akar):
-            ax.scatter([xr], [y_akar], color='red', label="Akar", zorder=5)
-
-        ax.set_title("Grafik Fungsi")
-        ax.legend()
-        st.pyplot(fig)
-
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.pyplot(fig)
+    st.markdown("</div>", unsafe_allow_html=True)
