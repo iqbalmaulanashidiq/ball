@@ -2,7 +2,6 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import math
-import matplotlib.pyplot as plt   
 
 # =============================
 # CUSTOM CSS
@@ -131,8 +130,10 @@ if hitung_button and valid_interval:
     # =============================
     # TABEL ITERASI
     # =============================
-    df = pd.DataFrame(data_iterasi,
-        columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"])
+    df = pd.DataFrame(
+        data_iterasi,
+        columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"]
+    )
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("Tabel Iterasi")
@@ -140,7 +141,7 @@ if hitung_button and valid_interval:
     st.markdown("</div>", unsafe_allow_html=True)
 
     # =============================
-    # GRAFIK
+    # GRAFIK (STREAMLIT NATIVE)
     # =============================
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("Grafik Fungsi f(x)")
@@ -148,12 +149,17 @@ if hitung_button and valid_interval:
     x_vals = np.linspace(a - 2, b + 2, 400)
     y_vals = [f(x) for x in x_vals]
 
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(x_vals, y_vals, label="f(x)")
-    ax.axhline(0)
-    ax.scatter(xr, f(xr), color="red", label="Akar")
-    ax.legend()
-    ax.grid(True)
+    df_plot = pd.DataFrame({
+        "x": x_vals,
+        "f(x)": y_vals
+    })
 
-    st.pyplot(fig)
+    st.line_chart(df_plot.set_index("x"))
+
+    st.markdown(f"""
+    **Titik Akar:**  
+    x = `{xr}`  
+    f(x) = `{f(xr)}`
+    """)
+
     st.markdown("</div>", unsafe_allow_html=True)
