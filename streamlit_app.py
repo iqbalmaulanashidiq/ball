@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import math
+import plotly.express as px
 
 # =============================
 # TOGGLE MODE
@@ -9,96 +10,82 @@ import math
 mode = st.toggle("🌙 Dark Mode", value=False)
 
 # =============================
-# CSS DINAMIS
+# WARNA DYNAMIC
 # =============================
-if mode:  # DARK MODE
+if mode:  # Dark Mode
     bg = "#0f172a"
-    card = "#0f172a"
+    card = "#1e293b"
     text = "#e5e7eb"
-    accent = "#38bdf8"
-else:     # LIGHT MODE
+    accent = "#60a5fa"
+else:     # Light Mode
     bg = "#f8fafc"
-    card = "#f8fafc"
+    card = "#ffffff"
     text = "#0f172a"
     accent = "#2563eb"
 
-st.markdown("""
+# =============================
+# CSS
+# =============================
+st.markdown(f"""
 <style>
-
-/* ===== GLOBAL ===== */
-html, body, [class*="css"] {
+html, body, [class*="css"] {{
     font-family: 'Inter', sans-serif;
-}
+}}
 
-/* Hilangkan background putih default */
-.stApp {
-    background-color: var(--bg);
-}
+.stApp {{
+    background-color: {bg};
+    color: {text};
+}}
 
-/* ===== THEME VARIABLES ===== */
-:root {
-    --bg: #f6f8fb;
-    --card: #ffffff;
-    --text: #1f2937;
-    --accent: #2563eb;
-}
-
-[data-theme="dark"] {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --text: #e5e7eb;
-    --accent: #60a5fa;
-}
-
-/* ===== HEADER ===== */
-h1 {
+h1 {{
     text-align: center;
     font-weight: 800;
-    color: var(--text);
+    color: {text};
     margin-bottom: 2rem;
-}
+}}
 
-/* ===== SECTION CONTAINER ===== */
-.block-container {
+.block-container {{
     padding-top: 2rem;
-}
+}}
 
-/* ===== INPUT & BUTTON ===== */
 .stTextInput input,
-.stNumberInput input {
-    background: var(--card);
-    color: var(--text);
+.stNumberInput input {{
+    background: {card};
+    color: {text};
     border-radius: 10px;
     border: 1px solid #e5e7eb;
-}
+}}
 
-.stButton button {
-    background: var(--accent);
+.stButton button {{
+    background: {accent};
     color: white;
     border-radius: 10px;
     padding: 0.6rem 1.2rem;
     font-weight: 600;
     border: none;
-}
+}}
 
-.stButton button:hover {
-    background: #1d4ed8;
-}
+.stButton button:hover {{
+    opacity: 0.85;
+}}
 
-/* ===== DATAFRAME ===== */
-[data-testid="stDataFrame"] {
+[data-testid="stDataFrame"] {{
     background: transparent !important;
-}
+}}
 
-/* ===== REMOVE WHITE BOX ===== */
 section[data-testid="stSidebar"],
 div[data-testid="stDecoration"],
-div[data-testid="stToolbar"] {
+div[data-testid="stToolbar"] {{
     display: none;
-}
-
+}}
 </style>
 """, unsafe_allow_html=True)
+
+# =============================
+# JUDUL & INPUT FUNGSI
+# =============================
+st.title("🔹 Metode Regula Falsi")
+fungsi = st.text_input("Masukkan fungsi f(x)", value="x**3 - x - 2")
 
 # =============================
 # INTERVAL
@@ -110,6 +97,9 @@ with col1:
 with col2:
     b = st.number_input("b", value=2.0)
 
+# =============================
+# VALIDASI FUNGSI
+# =============================
 def f(x):
     try:
         return eval(fungsi, {"x": x, "np": np, "math": math})
@@ -117,11 +107,18 @@ def f(x):
         return np.nan
 
 fa, fb = f(a), f(b)
-st.write(f"f(a) = {fa}")
-st.write(f"f(b) = {fb}")
 
-valid_interval = fa * fb < 0
-st.success("Interval valid ✓") if valid_interval else st.error("Interval tidak valid")
+if np.isnan(fa) or np.isnan(fb):
+    st.error("f(a) atau f(b) tidak valid. Periksa fungsi Anda!")
+    valid_interval = False
+else:
+    st.write(f"f(a) = {fa}")
+    st.write(f"f(b) = {fb}")
+    valid_interval = fa * fb < 0
+    if valid_interval:
+        st.success("Interval valid ✓")
+    else:
+        st.error("Interval tidak valid ❌")
 
 # =============================
 # PARAMETER
@@ -134,7 +131,7 @@ with col2:
     tol = st.number_input("Toleransi Error", value=1e-6, format="%.10f")
 
 # =============================
-# HITUNG
+# HITUNG AKAR
 # =============================
 if st.button("🔍 Hitung Akar") and valid_interval:
 
@@ -144,6 +141,10 @@ if st.button("🔍 Hitung Akar") and valid_interval:
     data = []
 
     for i in range(1, int(max_iter) + 1):
+        if fb - fa == 0:
+            st.error("Pembagi = 0. Metode gagal.")
+            break
+
         xr = (a0 * fb - b0 * fa) / (fb - fa)
         fxr = f(xr)
         err = abs(xr - xr_old)
@@ -169,31 +170,31 @@ if st.button("🔍 Hitung Akar") and valid_interval:
     st.write(f"**Iterasi:** `{len(data)}`")
 
     # =============================
-    # TABEL (TANPA BACKGROUND PUTIH)
+    # TABEL
     # =============================
-    df = pd.DataFrame(
-        data,
-        columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"]
-    )
-    st.dataframe(df, use_container_width=True)
+    df = pd.DataFrame(data, columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"])
+    st.dataframe(df.style.set_properties(**{'background-color': card, 'color': text}), use_container_width=True)
 
     # =============================
-    # GRAFIK STREAMLIT
+    # GRAFIK INTERAKTIF PLOTLY
     # =============================
     st.subheader("📈 Grafik f(x)")
     x_vals = np.linspace(a - 2, b + 2, 400)
     y_vals = [f(x) for x in x_vals]
+    df_plot = pd.DataFrame({"x": x_vals, "f(x)": y_vals})
 
-    df_plot = pd.DataFrame({
-        "x": x_vals,
-        "f(x)": y_vals
-    })
+    fig = px.line(df_plot, x='x', y='f(x)', title="Grafik f(x)")
+    fig.update_traces(line_color=accent)
+    fig.update_layout(
+        plot_bgcolor=bg,
+        paper_bgcolor=bg,
+        font_color=text,
+        xaxis_title="x",
+        yaxis_title="f(x)"
+    )
 
-    st.line_chart(df_plot.set_index("x"))
+    # Tampilkan titik akar
+    fig.add_scatter(x=[xr], y=[f(xr)], mode='markers', marker=dict(color='red', size=10), name="Akar")
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown(f"""
-    **Titik Akar:**  
-    x = `{xr}`  
-    f(x) = `{f(xr)}`
-    """)
-
+    st.markdown(f"**Titik Akar:** x = `{xr}`, f(x) = `{f(xr)}`")
