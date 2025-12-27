@@ -22,60 +22,83 @@ else:     # LIGHT MODE
     text = "#0f172a"
     accent = "#2563eb"
 
-st.markdown(f"""
+st.markdown("""
 <style>
-    html, body, [class*="css"] {{
-        background-color: {bg};
-        color: {text};
-    }}
 
-    h1 {{
-        text-align: center;
-        color: {accent};
-        font-family: 'Georgia', serif;
-    }}
+/* ===== GLOBAL ===== */
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
 
-    h2, h3 {{
-        color: {accent};
-    }}
+/* Hilangkan background putih default */
+.stApp {
+    background-color: var(--bg);
+}
 
-    /* Hilangkan box putih Streamlit */
-    section[data-testid="stSidebar"],
-    div[data-testid="stDataFrame"],
-    div[data-testid="stTable"] {{
-        background: transparent !important;
-        box-shadow: none !important;
-    }}
+/* ===== THEME VARIABLES ===== */
+:root {
+    --bg: #f6f8fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --accent: #2563eb;
+}
 
-    /* Input styling */
-    input {{
-        background-color: transparent !important;
-        color: {text} !important;
-        border-radius: 8px;
-    }}
+[data-theme="dark"] {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e5e7eb;
+    --accent: #60a5fa;
+}
 
-    /* Button */
-    button {{
-        border-radius: 10px;
-        background-color: {accent} !important;
-        color: white !important;
-    }}
+/* ===== HEADER ===== */
+h1 {
+    text-align: center;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 2rem;
+}
+
+/* ===== SECTION CONTAINER ===== */
+.block-container {
+    padding-top: 2rem;
+}
+
+/* ===== INPUT & BUTTON ===== */
+.stTextInput input,
+.stNumberInput input {
+    background: var(--card);
+    color: var(--text);
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.stButton button {
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    border: none;
+}
+
+.stButton button:hover {
+    background: #1d4ed8;
+}
+
+/* ===== DATAFRAME ===== */
+[data-testid="stDataFrame"] {
+    background: transparent !important;
+}
+
+/* ===== REMOVE WHITE BOX ===== */
+section[data-testid="stSidebar"],
+div[data-testid="stDecoration"],
+div[data-testid="stToolbar"] {
+    display: none;
+}
+
 </style>
 """, unsafe_allow_html=True)
-
-# =============================
-# TITLE
-# =============================
-st.markdown("<h1>Kalkulator SPNL – Regula Falsi</h1>", unsafe_allow_html=True)
-
-# =============================
-# INPUT FUNGSI
-# =============================
-st.subheader("1️⃣ Persamaan f(x)")
-fungsi = st.text_input(
-    "Contoh: x**3 - x - 2",
-    value="x**3 - x - 2"
-)
 
 # =============================
 # INTERVAL
