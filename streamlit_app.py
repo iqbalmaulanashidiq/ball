@@ -4,176 +4,141 @@ import pandas as pd
 import math
 
 # =============================
-# CUSTOM CSS
+# KONFIGURASI HALAMAN
+# =============================
+st.set_page_config(
+    page_title="Kalkulator SPNL - Regula Falsi",
+    layout="centered"
+)
+
+# =============================
+# CUSTOM CSS (HILANGKAN KOTAK PUTIH)
 # =============================
 st.markdown("""
 <style>
-    body { background: #f4f7f9; }
-    h1 {
-        font-family: 'Georgia', serif !important;
-        text-align: center;
-        color: #1976D2;
-        margin-bottom: 30px;
-    }
-    .card {
-        padding: 20px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0px 3px 12px rgba(0,0,0,0.15);
-        margin-bottom: 25px;
-    }
+
+/* Background utama */
+.stApp {
+    background-color: #f4f7f9;
+}
+
+/* Hilangkan semua container putih default */
+div[data-testid="stVerticalBlock"],
+div[data-testid="stContainer"] {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+/* Hilangkan markdown kosong */
+div[data-testid="stMarkdown"]:empty {
+    display: none;
+}
+
+/* Input styling */
+input {
+    background-color: #f1f3f5 !important;
+    border-radius: 12px !important;
+    border: none !important;
+    padding: 12px !important;
+    font-size: 16px !important;
+}
+
+/* Button styling */
+button {
+    background-color: #1976D2 !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 10px 20px !important;
+    border: none !important;
+    font-size: 16px !important;
+}
+
+/* Hilangkan jarak kosong berlebih */
+.block-container {
+    padding-top: 30px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 # =============================
-# TITLE
+# JUDUL
 # =============================
-st.markdown("<h1>Kalkulator SPNL - Metode Regula Falsi</h1>", unsafe_allow_html=True)
+st.markdown("""
+<h1 style="text-align:center; color:#1f2937; font-family:Georgia;">
+Kalkulator SPNL - Metode Regula Falsi
+</h1>
+""", unsafe_allow_html=True)
 
 # =============================
-# INPUT FUNGSI
+# INPUT
 # =============================
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("Step 1: Masukkan Persamaan f(x)")
+st.markdown("### Step 1: Masukkan Persamaan f(x)")
 fungsi = st.text_input(
-    "Contoh: x**3 - x - 2",
-    value="x**3 - x - 2"
-)
-st.markdown("</div>", unsafe_allow_html=True)
-
-# =============================
-# DEFINISI FUNGSI
-# =============================
-def f(x):
-    try:
-        return eval(
-            fungsi,
-            {"__builtins__": {}},
-            {"x": x, "np": np, "math": math}
-        )
-    except:
-        return np.nan
-
-# =============================
-# INTERVAL
-# =============================
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("Step 2: Pilih Interval")
-
-col1, col2 = st.columns(2)
-with col1:
-    a = st.number_input("a", value=1.0)
-with col2:
-    b = st.number_input("b", value=2.0)
-
-fa, fb = f(a), f(b)
-
-st.write(f"f(a) = {fa}")
-st.write(f"f(b) = {fb}")
-
-valid_interval = (
-    not np.isnan(fa) and
-    not np.isnan(fb) and
-    fa * fb < 0
+    label=" ",
+    placeholder="Contoh: x**3 - x - 2"
 )
 
-if valid_interval:
-    st.success("Interval valid ✓")
-else:
-    st.error("Interval tidak valid atau fungsi tidak dapat dihitung")
+st.markdown("### Step 2: Masukkan Interval Awal")
+a = st.number_input("Nilai a", value=1.0)
+b = st.number_input("Nilai b", value=2.0)
 
-st.markdown("</div>", unsafe_allow_html=True)
-
-# =============================
-# PARAMETER
-# =============================
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("Step 3: Pengaturan Lanjut")
-
-col1, col2 = st.columns(2)
-with col1:
-    max_iter = int(st.number_input("Maksimum Iterasi", value=50))
-with col2:
-    tol = st.number_input("Toleransi Error", value=1e-6, format="%.10f")
-
-hitung_button = st.button("Hitung Akar")
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("### Step 3: Toleransi & Iterasi")
+tol = st.number_input("Toleransi Error", value=0.0001)
+max_iter = st.number_input("Maksimum Iterasi", value=20, step=1)
 
 # =============================
-# REGULA FALSI
+# FUNGSI REGULA FALSI
 # =============================
-if hitung_button and valid_interval:
+def regula_falsi(f, a, b, tol, max_iter):
+    hasil = []
+    fa = f(a)
+    fb = f(b)
 
-    a0, b0 = a, b
-    fa, fb = f(a0), f(b0)
-    xr_old = a0
-    data_iterasi = []
+    if fa * fb > 0:
+        return None
 
     for i in range(1, max_iter + 1):
+        c = b - fb * (b - a) / (fb - fa)
+        fc = f(c)
 
-        if fb - fa == 0:
-            st.error("Pembagian nol terdeteksi.")
+        hasil.append([i, a, b, c, fc])
+
+        if abs(fc) < tol:
             break
 
-        xr = (a0 * fb - b0 * fa) / (fb - fa)
-        fxr = f(xr)
-
-        error = abs((xr - xr_old) / xr) if xr != 0 else abs(xr - xr_old)
-
-        data_iterasi.append([i, a0, b0, xr, fxr, error])
-
-        if error < tol:
-            break
-
-        if fa * fxr < 0:
-            b0, fb = xr, fxr
+        if fa * fc < 0:
+            b = c
+            fb = fc
         else:
-            a0, fa = xr, fxr
+            a = c
+            fa = fc
 
-        xr_old = xr
+    return hasil
 
-    # =============================
-    # HASIL
-    # =============================
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("Hasil Perhitungan")
-    st.success(f"""
-    **Akar mendekati:** {xr}  
-    **f(xr):** {fxr}  
-    **Error akhir:** {error}  
-    **Total iterasi:** {len(data_iterasi)}
-    """)
-    st.markdown("</div>", unsafe_allow_html=True)
+# =============================
+# PROSES
+# =============================
+if st.button("Hitung Akar"):
+    if fungsi.strip() == "":
+        st.warning("Masukkan persamaan terlebih dahulu!")
+    else:
+        try:
+            f = lambda x: eval(fungsi)
 
-    # =============================
-    # TABEL ITERASI
-    # =============================
-    df = pd.DataFrame(
-        data_iterasi,
-        columns=["Iterasi", "a", "b", "xr", "f(xr)", "Error"]
-    )
+            data = regula_falsi(f, a, b, tol, int(max_iter))
 
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("Tabel Iterasi")
-    st.dataframe(df, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+            if data is None:
+                st.error("f(a) dan f(b) harus berlainan tanda!")
+            else:
+                df = pd.DataFrame(
+                    data,
+                    columns=["Iterasi", "a", "b", "c", "f(c)"]
+                )
+                st.success(f"Akar ditemukan: {df.iloc[-1]['c']}")
+                st.dataframe(df, use_container_width=True)
 
-    # =============================
-    # GRAFIK
-    # =============================
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("Grafik Fungsi f(x)")
-
-    x_vals = np.linspace(a - 2, b + 2, 400)
-    y_vals = [f(x) for x in x_vals]
-
-    df_plot = pd.DataFrame({"x": x_vals, "f(x)": y_vals})
-    st.line_chart(df_plot.set_index("x"))
-
-    st.markdown(f"""
-    **Titik Akar:**  
-    x = `{xr}`  
-    f(x) = `{fxr}`
-    """)
-
-    st.markdown("</div>", unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"Terjadi kesalahan: {e}")
