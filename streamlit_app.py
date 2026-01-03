@@ -7,19 +7,24 @@ import pandas as pd
 st.set_page_config(
     page_title="Kalkulator SPNL - Regula Falsi",
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # =============================
-# DARK MODE STATE (AMAN)
+# STATE DARK MODE
 # =============================
 if "dark" not in st.session_state:
     st.session_state.dark = False
 
-st.session_state.dark = st.toggle(
-    "🌙 Dark Mode",
-    value=st.session_state.dark
-)
+# =============================
+# SIDEBAR
+# =============================
+with st.sidebar:
+    st.markdown("## ⚙️ Pengaturan")
+    st.session_state.dark = st.toggle(
+        "🌙 Dark Mode",
+        value=st.session_state.dark
+    )
 
 # =============================
 # WARNA
@@ -39,7 +44,7 @@ else:
 st.markdown(f"""
 <style>
 
-/* GLOBAL RESET */
+/* RESET */
 * {{
     box-shadow: none !important;
 }}
@@ -50,13 +55,28 @@ st.markdown(f"""
     color: {TEXT};
 }}
 
-/* HAPUS SEMUA WRAPPER STREAMLIT */
+/* SIDEBAR */
+section[data-testid="stSidebar"] {{
+    background-color: {BG} !important;
+    border-right: none !important;
+}}
+
+/* HAPUS CONTAINER PUTIH */
 div[data-testid="stContainer"],
 div[data-testid="stVerticalBlock"],
-section[data-testid="stSidebar"],
 div[data-testid="stForm"] {{
     background: transparent !important;
     border: none !important;
+}}
+
+/* BLOK KOSONG (KUNCI) */
+div[data-testid="stVerticalBlock"]:has(> div:empty) {{
+    display: none !important;
+}}
+
+/* MARKDOWN KOSONG */
+div[data-testid="stMarkdown"]:empty {{
+    display: none !important;
 }}
 
 /* INPUT */
@@ -66,7 +86,6 @@ input {{
     border-radius: 12px !important;
     border: none !important;
     padding: 12px !important;
-    font-size: 15px !important;
 }}
 
 /* BUTTON */
@@ -76,10 +95,9 @@ button {{
     border-radius: 12px !important;
     border: none !important;
     padding: 10px 22px !important;
-    font-size: 15px !important;
 }}
 
-/* HAPUS SPASI ATAS */
+/* PADDING ATAS */
 .block-container {{
     padding-top: 28px;
 }}
@@ -88,19 +106,20 @@ button {{
 """, unsafe_allow_html=True)
 
 # =============================
-# JUDUL (TANPA SPACER PALSU)
+# JUDUL
 # =============================
 st.markdown(f"""
-<h1 style="text-align:center;
-           font-family:Georgia;
-           margin-bottom:25px;
-           color:{TEXT};">
+<h1 style="
+    text-align:center;
+    font-family:Georgia;
+    margin-bottom:25px;
+    color:{TEXT};">
 Kalkulator SPNL – Metode Regula Falsi
 </h1>
 """, unsafe_allow_html=True)
 
 # =============================
-# INPUT (BERSIH)
+# INPUT
 # =============================
 st.subheader("Step 1: Masukkan Persamaan f(x)")
 fungsi = st.text_input(
@@ -113,54 +132,4 @@ a = st.number_input("Nilai a", value=1.0)
 b = st.number_input("Nilai b", value=2.0)
 
 st.subheader("Step 3: Parameter Iterasi")
-tol = st.number_input("Toleransi Error", value=0.0001)
-max_iter = st.number_input("Maksimum Iterasi", value=20, step=1)
-
-# =============================
-# FUNGSI REGULA FALSI
-# =============================
-def regula_falsi(f, a, b, tol, max_iter):
-    hasil = []
-    fa, fb = f(a), f(b)
-
-    if fa * fb > 0:
-        return None
-
-    for i in range(1, max_iter + 1):
-        c = b - fb * (b - a) / (fb - fa)
-        fc = f(c)
-        hasil.append([i, a, b, c, fc])
-
-        if abs(fc) < tol:
-            break
-
-        if fa * fc < 0:
-            b, fb = c, fc
-        else:
-            a, fa = c, fc
-
-    return hasil
-
-# =============================
-# PROSES
-# =============================
-if st.button("Hitung Akar"):
-    if fungsi.strip() == "":
-        st.warning("Masukkan persamaan terlebih dahulu.")
-    else:
-        try:
-            f = lambda x: eval(fungsi)
-            data = regula_falsi(f, a, b, tol, int(max_iter))
-
-            if data is None:
-                st.error("f(a) dan f(b) harus berlainan tanda.")
-            else:
-                df = pd.DataFrame(
-                    data,
-                    columns=["Iterasi", "a", "b", "c", "f(c)"]
-                )
-                st.success(f"Akar ≈ {df.iloc[-1]['c']}")
-                st.dataframe(df, use_container_width=True)
-
-        except Exception as e:
-            st.error(f"Terjadi kesalahan: {e}")
+tol = st.number
