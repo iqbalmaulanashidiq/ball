@@ -5,7 +5,7 @@ import pandas as pd
 # PAGE CONFIG
 # =============================
 st.set_page_config(
-    page_title="Kalkulator SPNL - Regula Falsi",
+    page_title="Kalkulator SPNL -  Falsi",
     layout="centered",
     initial_sidebar_state="expanded"
 )
