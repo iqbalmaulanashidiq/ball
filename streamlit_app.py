@@ -1,91 +1,128 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
-import math
 
 # =============================
-# KONFIGURASI HALAMAN
+# PAGE CONFIG
 # =============================
 st.set_page_config(
     page_title="Kalkulator SPNL - Regula Falsi",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
 # =============================
-# CUSTOM CSS (HILANGKAN KOTAK PUTIH)
+# DARK MODE STATE (AMAN)
 # =============================
-st.markdown("""
+if "dark" not in st.session_state:
+    st.session_state.dark = False
+
+st.session_state.dark = st.toggle(
+    "🌙 Dark Mode",
+    value=st.session_state.dark
+)
+
+# =============================
+# WARNA
+# =============================
+if st.session_state.dark:
+    BG = "#0f172a"
+    TEXT = "#e5e7eb"
+    INPUT = "#334155"
+else:
+    BG = "#f4f7f9"
+    TEXT = "#1f2937"
+    INPUT = "#f1f3f5"
+
+# =============================
+# CSS FINAL (ANTI KOTAK PUTIH)
+# =============================
+st.markdown(f"""
 <style>
 
-/* Background utama */
-.stApp {
-    background-color: #f4f7f9;
-}
-
-/* Hilangkan semua container putih default */
-div[data-testid="stVerticalBlock"],
-div[data-testid="stContainer"] {
-    background: transparent !important;
+/* GLOBAL RESET */
+* {{
     box-shadow: none !important;
+}}
+
+/* BACKGROUND */
+.stApp {{
+    background-color: {BG};
+    color: {TEXT};
+}}
+
+/* HAPUS SEMUA WRAPPER STREAMLIT */
+div[data-testid="stContainer"],
+div[data-testid="stVerticalBlock"],
+section[data-testid="stSidebar"],
+div[data-testid="stForm"] {{
+    background: transparent !important;
     border: none !important;
-    padding: 0 !important;
-}
+}}
 
-/* Hilangkan markdown kosong */
-div[data-testid="stMarkdown"]:empty {
-    display: none;
-}
+/* HAPUS BLOK KOSONG (INI KUNCI UTAMA) */
+div[data-testid="stVerticalBlock"]:has(> div:empty) {{
+    display: none !important;
+}}
 
-/* Input styling */
-input {
-    background-color: #f1f3f5 !important;
+/* HAPUS MARKDOWN KOSONG */
+div[data-testid="stMarkdown"]:empty {{
+    display: none !important;
+}}
+
+/* INPUT */
+input {{
+    background-color: {INPUT} !important;
+    color: {TEXT} !important;
     border-radius: 12px !important;
     border: none !important;
     padding: 12px !important;
-    font-size: 16px !important;
-}
+    font-size: 15px !important;
+}}
 
-/* Button styling */
-button {
+/* BUTTON */
+button {{
     background-color: #1976D2 !important;
     color: white !important;
     border-radius: 12px !important;
-    padding: 10px 20px !important;
     border: none !important;
-    font-size: 16px !important;
-}
+    padding: 10px 22px !important;
+    font-size: 15px !important;
+}}
 
-/* Hilangkan jarak kosong berlebih */
-.block-container {
-    padding-top: 30px;
-}
+/* HAPUS SPASI ATAS */
+.block-container {{
+    padding-top: 28px;
+}}
 
 </style>
 """, unsafe_allow_html=True)
 
 # =============================
-# JUDUL
+# JUDUL (TANPA SPACER PALSU)
 # =============================
-st.markdown("""
-<h1 style="text-align:center; color:#1f2937; font-family:Georgia;">
-Kalkulator SPNL - Metode Regula Falsi
+st.markdown(f"""
+<h1 style="text-align:center;
+           font-family:Georgia;
+           margin-bottom:25px;
+           color:{TEXT};">
+Kalkulator SPNL – Metode Regula Falsi
 </h1>
 """, unsafe_allow_html=True)
 
 # =============================
-# INPUT
+# INPUT (BERSIH)
 # =============================
-st.markdown("### Step 1: Masukkan Persamaan f(x)")
+st.subheader("Step 1: Masukkan Persamaan f(x)")
 fungsi = st.text_input(
-    label=" ",
+    label="Persamaan",
     placeholder="Contoh: x**3 - x - 2"
 )
 
-st.markdown("### Step 2: Masukkan Interval Awal")
+st.subheader("Step 2: Interval Awal")
 a = st.number_input("Nilai a", value=1.0)
 b = st.number_input("Nilai b", value=2.0)
 
-st.markdown("### Step 3: Toleransi & Iterasi")
+st.subheader("Step 3: Parameter Iterasi")
 tol = st.number_input("Toleransi Error", value=0.0001)
 max_iter = st.number_input("Maksimum Iterasi", value=20, step=1)
 
@@ -94,8 +131,7 @@ max_iter = st.number_input("Maksimum Iterasi", value=20, step=1)
 # =============================
 def regula_falsi(f, a, b, tol, max_iter):
     hasil = []
-    fa = f(a)
-    fb = f(b)
+    fa, fb = f(a), f(b)
 
     if fa * fb > 0:
         return None
@@ -103,18 +139,15 @@ def regula_falsi(f, a, b, tol, max_iter):
     for i in range(1, max_iter + 1):
         c = b - fb * (b - a) / (fb - fa)
         fc = f(c)
-
         hasil.append([i, a, b, c, fc])
 
         if abs(fc) < tol:
             break
 
         if fa * fc < 0:
-            b = c
-            fb = fc
+            b, fb = c, fc
         else:
-            a = c
-            fa = fc
+            a, fa = c, fc
 
     return hasil
 
@@ -123,21 +156,20 @@ def regula_falsi(f, a, b, tol, max_iter):
 # =============================
 if st.button("Hitung Akar"):
     if fungsi.strip() == "":
-        st.warning("Masukkan persamaan terlebih dahulu!")
+        st.warning("Masukkan persamaan terlebih dahulu.")
     else:
         try:
             f = lambda x: eval(fungsi)
-
             data = regula_falsi(f, a, b, tol, int(max_iter))
 
             if data is None:
-                st.error("f(a) dan f(b) harus berlainan tanda!")
+                st.error("f(a) dan f(b) harus berlainan tanda.")
             else:
                 df = pd.DataFrame(
                     data,
                     columns=["Iterasi", "a", "b", "c", "f(c)"]
                 )
-                st.success(f"Akar ditemukan: {df.iloc[-1]['c']}")
+                st.success(f"Akar ≈ {df.iloc[-1]['c']}")
                 st.dataframe(df, use_container_width=True)
 
         except Exception as e:
