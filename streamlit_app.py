@@ -59,16 +59,6 @@ div[data-testid="stForm"] {{
     border: none !important;
 }}
 
-/* HAPUS BLOK KOSONG (INI KUNCI UTAMA) */
-div[data-testid="stVerticalBlock"]:has(> div:empty) {{
-    display: none !important;
-}}
-
-/* HAPUS MARKDOWN KOSONG */
-div[data-testid="stMarkdown"]:empty {{
-    display: none !important;
-}}
-
 /* INPUT */
 input {{
     background-color: {INPUT} !important;
